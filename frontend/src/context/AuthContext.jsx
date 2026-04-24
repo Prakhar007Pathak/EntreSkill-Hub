@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check if user is logged in on mount
         const currentUser = authService.getCurrentUser();
         setUser(currentUser);
         setLoading(false);
@@ -39,6 +38,17 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    // ─── Role Helpers ──────────────────────────────────────
+    const isUser = user?.role === 'user';
+    const isMentor = user?.role === 'mentor';
+    const isAdmin = user?.role === 'admin';
+
+    // ─── Mentor Status Helpers ─────────────────────────────
+    const isMentorOnboardingDone = user?.mentorOnboardingCompleted === true;
+    const isMentorApproved = user?.mentorVerificationStatus === 'approved';
+    const isMentorPending = user?.mentorVerificationStatus === 'pending';
+    const isMentorRejected = user?.mentorVerificationStatus === 'rejected';
+
     const value = {
         user,
         setUser,
@@ -47,7 +57,22 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         isAuthenticated: !!user,
+
+        // Role helpers
+        isUser,
+        isMentor,
+        isAdmin,
+
+        // Mentor status helpers
+        isMentorOnboardingDone,
+        isMentorApproved,
+        isMentorPending,
+        isMentorRejected
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
 };

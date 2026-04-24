@@ -1,6 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation
+} from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
+
+// User Pages
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -13,14 +21,23 @@ import LearningResources from './pages/LearningResources';
 import ResourceDetail from './pages/ResourceDetail';
 import Bookmarks from './pages/Bookmarks';
 
+// Mentor Pages
+import MentorRegister from './pages/MentorRegister';
+import MentorOnboarding from './pages/MentorOnboarding';
+import MentorPendingVerification from './pages/MentorPendingVerification';
+
+// ─── Protected Route (User) ────────────────────────────────
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, user, isMentor } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-2xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -29,13 +46,90 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
-  // If user hasn't completed onboarding and tries to access dashboard
-  if (!user?.onboardingCompleted && location.pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" />;
+  // ── Mentor routing logic ──
+  if (isMentor) {
+    // If mentor onboarding not done → go to mentor onboarding
+    if (!user?.mentorOnboardingCompleted &&
+      location.pathname !== '/mentor/onboarding') {
+      return <Navigate to="/mentor/onboarding" />;
+    }
+    // If mentor onboarding done but not approved → pending page
+    if (user?.mentorOnboardingCompleted &&
+      user?.mentorVerificationStatus !== 'approved' &&
+      location.pathname !== '/mentor/pending') {
+      return <Navigate to="/mentor/pending" />;
+    }
+    // If mentor approved but trying to access user pages
+    // → redirect to mentor dashboard (we'll build this next)
+    if (user?.mentorVerificationStatus === 'approved' &&
+      location.pathname === '/dashboard') {
+      return <Navigate to="/mentor/dashboard" />;
+    }
   }
 
-  // If user completed onboarding but is on onboarding page
-  if (user?.onboardingCompleted && location.pathname === '/onboarding') {
+  // ── User routing logic ──
+  if (!isMentor) {
+    if (!user?.onboardingCompleted &&
+      location.pathname !== '/onboarding') {
+      return <Navigate to="/onboarding" />;
+    }
+    if (user?.onboardingCompleted &&
+      location.pathname === '/onboarding') {
+      return <Navigate to="/dashboard" />;
+    }
+  }
+
+  return children;
+};
+
+// ─── Mentor Protected Route ────────────────────────────────
+const MentorRoute = ({ children }) => {
+  const { isAuthenticated, loading, user, isMentor } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (!isMentor) return <Navigate to="/dashboard" />;
+
+  // Force onboarding if not done
+  if (!user?.mentorOnboardingCompleted &&
+    location.pathname !== '/mentor/onboarding') {
+    return <Navigate to="/mentor/onboarding" />;
+  }
+
+  // Force pending page if not approved
+  if (user?.mentorOnboardingCompleted &&
+    user?.mentorVerificationStatus !== 'approved' &&
+    location.pathname !== '/mentor/pending') {
+    return <Navigate to="/mentor/pending" />;
+  }
+
+  return children;
+};
+
+// ─── Public Only Route (redirect if logged in) ─────────────
+const PublicRoute = ({ children }) => {
+  const { isAuthenticated, loading, user, isMentor } = useAuth();
+
+  if (loading) return null;
+
+  if (isAuthenticated) {
+    if (isMentor) {
+      if (!user?.mentorOnboardingCompleted) {
+        return <Navigate to="/mentor/onboarding" />;
+      }
+      if (user?.mentorVerificationStatus !== 'approved') {
+        return <Navigate to="/mentor/pending" />;
+      }
+      return <Navigate to="/mentor/dashboard" />;
+    }
     return <Navigate to="/dashboard" />;
   }
 
@@ -48,12 +142,54 @@ function App() {
       <Toaster position="top-center" />
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
 
-          {/* Protected Routes */}
+          {/* ── Public Routes ── */}
+          <Route path="/" element={<Landing />} />
+
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/mentor/register"
+            element={
+              <PublicRoute>
+                <MentorRegister />
+              </PublicRoute>
+            }
+          />
+
+          {/* ── Mentor Routes ── */}
+          <Route
+            path="/mentor/onboarding"
+            element={
+              <MentorRoute>
+                <MentorOnboarding />
+              </MentorRoute>
+            }
+          />
+          <Route
+            path="/mentor/pending"
+            element={
+              <MentorRoute>
+                <MentorPendingVerification />
+              </MentorRoute>
+            }
+          />
+
+          {/* ── User Protected Routes ── */}
           <Route
             path="/onboarding"
             element={
@@ -62,7 +198,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/dashboard"
             element={
@@ -71,7 +206,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/businesses"
             element={
@@ -80,7 +214,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/business/:slug"
             element={
@@ -89,7 +222,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/roadmap/:slug"
             element={
@@ -98,7 +230,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/resources"
             element={
@@ -107,7 +238,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/resources/:slug"
             element={
@@ -116,7 +246,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/bookmarks"
             element={
@@ -125,6 +254,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* ── Fallback ── */}
+          <Route path="*" element={<Navigate to="/" />} />
 
         </Routes>
       </BrowserRouter>

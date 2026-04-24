@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-        "seed:businesses": "node src/seeds/businessSeeder.js",
+    "seed:businesses": "node src/seeds/businessSeeder.js",
     "seed:roadmaps": "node src/seeds/roadmapSeeder.js",
     "seed:resources": "node src/seeds/resourceSeeder.js"
   },
@@ -22,7 +22,8 @@
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.4.1"
+    "mongoose": "^9.4.1",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Sparkles, TrendingUp, Users, Target, Zap } from 'lucide-react';
-// import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 
@@ -67,7 +67,7 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center relative overflow-hidden p-4">
-            {/* <Toaster position="top-center" /> */}
+            <Toaster position="top-center" />
 
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">

@@ -2,24 +2,26 @@ import User from '../models/User.js';
 import { generateToken } from '../utils/jwt.js';
 import Progress from '../models/Progress.js';
 
-// @desc    Register new user
+// @desc    Register new user OR mentor
 // @route   POST /api/auth/register
 // @access  Public
 export const register = async (req, res) => {
     try {
-        const { fullName, email, password, phone } = req.body;
+        const { fullName, email, password, phone, role } = req.body;
 
-        // Validate input
-        if (!fullName || !email || !password) {
+        // Validate required fields
+        if (!fullName || !email || !password || !phone) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
             });
         }
 
+        // Prevent public admin registration
+        const assignedRole = role === 'mentor' ? 'mentor' : 'user';
+
         // Check if user already exists
         const userExists = await User.findOne({ email });
-
         if (userExists) {
             return res.status(400).json({
                 success: false,
@@ -27,29 +29,38 @@ export const register = async (req, res) => {
             });
         }
 
-        // Create user
+        // Create user/mentor
         const user = await User.create({
             fullName,
             email,
             password,
-            phone
+            phone,
+            role: assignedRole
         });
 
-        // Initialize progress tracking
-        await Progress.initializeForUser(user._id);
+        // Initialize progress tracking (for users only)
+        if (assignedRole === 'user') {
+            await Progress.initializeForUser(user._id);
+        }
 
         // Generate token
         const token = generateToken(user._id);
 
         res.status(201).json({
             success: true,
-            message: 'User registered successfully',
+            message: assignedRole === 'mentor'
+                ? 'Mentor account created! Please complete your profile.'
+                : 'User registered successfully',
             data: {
                 user: {
                     id: user._id,
                     fullName: user.fullName,
                     email: user.email,
-                    role: user.role
+                    role: user.role,
+                    phone: user.phone,
+                    onboardingCompleted: user.onboardingCompleted,
+                    mentorOnboardingCompleted: user.mentorOnboardingCompleted,
+                    mentorVerificationStatus: user.mentorVerificationStatus
                 },
                 token
             }
@@ -64,14 +75,13 @@ export const register = async (req, res) => {
     }
 };
 
-// @desc    Login user
+// @desc    Login user or mentor
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Validate input
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
@@ -79,7 +89,6 @@ export const login = async (req, res) => {
             });
         }
 
-        // Find user (include password this time)
         const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
@@ -89,9 +98,7 @@ export const login = async (req, res) => {
             });
         }
 
-        // Check if password matches
         const isPasswordMatch = await user.comparePassword(password);
-
         if (!isPasswordMatch) {
             return res.status(401).json({
                 success: false,
@@ -99,11 +106,9 @@ export const login = async (req, res) => {
             });
         }
 
-        // Update last active
         user.lastActive = Date.now();
         await user.save();
 
-        // Generate token
         const token = generateToken(user._id);
 
         res.status(200).json({
@@ -115,7 +120,11 @@ export const login = async (req, res) => {
                     fullName: user.fullName,
                     email: user.email,
                     role: user.role,
-                    onboardingCompleted: user.onboardingCompleted
+                    phone: user.phone,
+                    onboardingCompleted: user.onboardingCompleted,
+                    mentorOnboardingCompleted: user.mentorOnboardingCompleted,
+                    mentorVerificationStatus: user.mentorVerificationStatus,
+                    mentorSlug: user.mentorSlug
                 },
                 token
             }
@@ -136,7 +145,6 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-
         res.status(200).json({
             success: true,
             data: { user }
@@ -155,7 +163,6 @@ export const getMe = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { fullName, phone, location } = req.body;
-
         const user = await User.findById(req.user.id);
 
         if (fullName) user.fullName = fullName;
