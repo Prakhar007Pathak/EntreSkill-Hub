@@ -14,8 +14,14 @@ const notificationSchema = new mongoose.Schema({
             'roadmap_completed',    // completed entire roadmap
             'resource_new',         // new resource available
             'resource_completed',   // completed a resource
+            'resource_approved',    // ✅ ADDED: mentor's resource approved
+            'resource_rejected',    // ✅ ADDED: mentor's resource rejected
             'mentor_connected',     // connected with mentor
             'mentor_session',       // mentor session booked
+            'mentor_approved',      // ✅ ADDED: mentor account approved
+            'mentor_rejected',      // ✅ ADDED: mentor account rejected
+            'new_question',         // ✅ ADDED: new Q&A question
+            'question_answered',    // ✅ ADDED: Q&A question answered
             'task_completed',       // completed a task
             'bookmark_added',       // bookmarked something
             'system'                // general system notification

@@ -43,11 +43,29 @@ const Login = () => {
                 },
             });
 
-            // Check if onboarding is completed
-            if (user.onboardingCompleted) {
-                setTimeout(() => navigate('/dashboard'), 1000);
+            // ✅ FIXED: Proper routing based on role
+            if (user.role === 'admin') {
+                setTimeout(() => navigate('/admin/dashboard'), 1000);
+            } else if (user.role === 'mentor') {
+                // Check mentor onboarding & verification status
+                if (!user.mentorOnboardingCompleted) {
+                    setTimeout(() => navigate('/mentor/onboarding'), 1000);
+                } else if (user.mentorVerificationStatus === 'pending') {
+                    setTimeout(() => navigate('/mentor/pending'), 1000);
+                } else if (user.mentorVerificationStatus === 'approved') {
+                    setTimeout(() => navigate('/mentor/dashboard'), 1000);
+                } else if (user.mentorVerificationStatus === 'rejected') {
+                    setTimeout(() => navigate('/mentor/pending'), 1000);
+                } else {
+                    setTimeout(() => navigate('/mentor/pending'), 1000);
+                }
             } else {
-                setTimeout(() => navigate('/onboarding'), 1000);
+                // Regular user
+                if (user.onboardingCompleted) {
+                    setTimeout(() => navigate('/dashboard'), 1000);
+                } else {
+                    setTimeout(() => navigate('/onboarding'), 1000);
+                }
             }
 
         } catch (err) {
@@ -259,6 +277,7 @@ const Login = () => {
                                     type="email"
                                     name="email"
                                     label="Email Address"
+                                    autoComplete="email"
                                     icon={Mail}
                                     value={formData.email}
                                     onChange={handleChange}
@@ -269,6 +288,7 @@ const Login = () => {
                                     type="password"
                                     name="password"
                                     label="Password"
+                                    autoComplete="current-password"
                                     icon={Lock}
                                     value={formData.password}
                                     onChange={handleChange}

@@ -24,6 +24,7 @@ const Counter = ({ value, duration = 2 }) => {
                 setCount(start);
                 if (start === end) clearInterval(timer);
             }, incrementTime);
+            return () => clearInterval(timer);
         }
     }, [isInView, value, duration]);
 
@@ -32,6 +33,8 @@ const Counter = ({ value, duration = 2 }) => {
 
 const Landing = () => {
     const ref = useRef(null);
+
+    // Only use scroll if we want parallax effect
     const { scrollYProgress } = useScroll({
         target: ref,
         offset: ["start start", "end start"]
@@ -48,7 +51,8 @@ const Landing = () => {
     };
 
     return (
-        <div ref={ref} className="bg-[#FAFAFA] text-slate-900 selection:bg-blue-100 scroll-smooth">
+        // ✅ FIXED: Added 'relative' positioning
+        <div ref={ref} className="relative bg-[#FAFAFA] text-slate-900 selection:bg-blue-100 scroll-smooth min-h-screen">
             {/* 1. UPDATED NAVIGATION */}
             <nav className="fixed top-4 inset-x-0 max-w-5xl mx-auto z-50">
                 <div className="bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-2xl px-6 py-3 shadow-sm flex items-center justify-between">
@@ -77,7 +81,11 @@ const Landing = () => {
             {/* HERO SECTION */}
             <section className="relative pt-44 pb-32 overflow-hidden px-6">
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
-                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="relative"
+                    >
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-gray-200 rounded-full mb-6 shadow-sm">
                             <Sparkles size={14} className="text-blue-500" />
                             <span className="text-[12px] font-bold uppercase tracking-wider text-slate-500">Enablement Platform</span>
@@ -88,27 +96,38 @@ const Landing = () => {
                         <p className="text-xl text-slate-500 mb-10 leading-relaxed max-w-xl">
                             EntreSkill Hub converts practical skills into profitable micro-enterprises through structured roadmaps and expert-led mentorship.
                         </p>
-                        <button className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-group">
+                        <Link to="/register" className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-group inline-block">
                             Explore Opportunities <ArrowRight size={18} className="ml-2" />
-                        </button>
+                        </Link>
                     </motion.div>
 
                     {/* Interactive Preview */}
                     <div className="hidden lg:block">
-                        <div className="bg-white border border-gray-200 rounded-[32px] p-8 shadow-2xl">
+                        <div className="bg-white border border-gray-200 rounded-[32px] p-8 shadow-2xl relative">
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Target className="text-blue-600" /> Smart Match Engine</h3>
                             <p className="text-slate-500 text-sm mb-6">Select your existing skill to generate a startup concept:</p>
                             <div className="flex flex-wrap gap-3 mb-10">
                                 {Object.keys(skillMatches).map((skill) => (
-                                    <button key={skill} onClick={() => setSelectedSkill(skill)}
-                                        className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${selectedSkill === skill ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:border-blue-300'}`}>
+                                    <button
+                                        key={skill}
+                                        onClick={() => setSelectedSkill(skill)}
+                                        className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${selectedSkill === skill
+                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            : 'bg-white text-slate-600 hover:border-blue-300'
+                                            }`}
+                                    >
                                         {skill}
                                     </button>
                                 ))}
                             </div>
                             <AnimatePresence mode="wait">
                                 {selectedSkill && (
-                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="bg-blue-50 border border-blue-100 rounded-2xl p-6"
+                                    >
                                         <p className="text-blue-600 text-[10px] font-bold uppercase mb-1">Recommended Venture</p>
                                         <h4 className="text-xl font-bold text-slate-800">{skillMatches[selectedSkill]}</h4>
                                     </motion.div>
@@ -120,7 +139,7 @@ const Landing = () => {
             </section>
 
             {/* 1. THE ENTREPRENEUR'S TOOLKIT - UPDATED CONTENT & DESIGN */}
-            <section id="features" className="py-32 px-6 bg-white scroll-mt-20">
+            <section id="features" className="py-32 px-6 bg-white scroll-mt-20 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="max-w-3xl mb-16">
                         <span className="text-blue-600 font-bold uppercase tracking-widest text-xs">Core Infrastructure</span>
@@ -129,7 +148,7 @@ const Landing = () => {
                             <span className="text-slate-400">go from Zero to Revenue.</span>
                         </h2>
                         <p className="text-slate-500 text-lg leading-relaxed">
-                            We’ve condensed years of business experience into a modular toolkit designed to eliminate
+                            We've condensed years of business experience into a modular toolkit designed to eliminate
                             operational friction and focus on what matters: your growth.
                         </p>
                     </div>
@@ -152,22 +171,30 @@ const Landing = () => {
                             {/* Visual element: Roadmap Path Illustration */}
                             <div className="mt-8 flex gap-3 overflow-hidden">
                                 {[1, 2, 3, 4].map((step) => (
-                                    <div key={step} className="flex-1 bg-white/5 border border-white/10 p-4 rounded-xl">
+                                    <motion.div
+                                        key={step}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: step * 0.1 }}
+                                        className="flex-1 bg-white/5 border border-white/10 p-4 rounded-xl relative"
+                                    >
                                         <div className="text-[10px] text-blue-400 font-bold mb-1">PHASE 0{step}</div>
                                         <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                                             <motion.div
                                                 initial={{ width: 0 }}
-                                                whileInView={{ width: step * 25 + '%' }}
+                                                whileInView={{ width: `${step * 25}%` }}
+                                                transition={{ duration: 1, delay: step * 0.2 }}
                                                 className="h-full bg-blue-500"
                                             />
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
 
                         {/* 2. Expert Mentorship - Tall Sidebar Card */}
-                        <div className="md:col-span-5 bg-blue-50 border border-blue-100 rounded-[2.5rem] p-10 flex flex-col">
+                        <div className="md:col-span-5 bg-blue-50 border border-blue-100 rounded-[2.5rem] p-10 flex flex-col relative">
                             <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm">
                                 <Users className="text-blue-600" size={28} />
                             </div>
@@ -189,7 +216,7 @@ const Landing = () => {
                         </div>
 
                         {/* 3. Multiple Business Ideas - Wide Bottom Card */}
-                        <div className="md:col-span-5 bg-gray-50 border border-gray-200 rounded-[2.5rem] p-10 flex flex-col justify-between">
+                        <div className="md:col-span-5 bg-gray-50 border border-gray-200 rounded-[2.5rem] p-10 flex flex-col justify-between relative">
                             <div>
                                 <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm">
                                     <Lightbulb className="text-orange-500" size={28} />
@@ -220,7 +247,12 @@ const Landing = () => {
                                         and capital efficiency in real-time.
                                     </p>
                                 </div>
-                                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6">
+                                <motion.div
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    viewport={{ once: true }}
+                                    className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 relative"
+                                >
                                     <div className="flex justify-between items-end mb-4">
                                         <span className="text-xs font-bold text-indigo-200 uppercase tracking-tighter">Milestones Met</span>
                                         <span className="text-2xl font-black">78%</span>
@@ -228,11 +260,16 @@ const Landing = () => {
                                     <div className="space-y-3">
                                         {[70, 45, 90].map((w, i) => (
                                             <div key={i} className="h-2 w-full bg-white/10 rounded-full">
-                                                <div className="h-full bg-white rounded-full" style={{ width: `${w}%` }} />
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    whileInView={{ width: `${w}%` }}
+                                                    transition={{ duration: 1, delay: i * 0.2 }}
+                                                    className="h-full bg-white rounded-full"
+                                                />
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
                             {/* Decorative background shape */}
                             <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
@@ -242,7 +279,7 @@ const Landing = () => {
             </section>
 
             {/* 2. ROADMAP: THE JOURNEY*/}
-            <section id="roadmaps" className="py-32 px-6 bg-[#FAFAFA] scroll-mt-20">
+            <section id="roadmaps" className="py-32 px-6 bg-[#FAFAFA] scroll-mt-20 relative">
                 <div className="max-w-5xl mx-auto">
                     <div className="text-center mb-24">
                         <span className="text-blue-600 font-bold uppercase tracking-[0.2em] text-xs">A Proven Reality</span>
@@ -262,8 +299,14 @@ const Landing = () => {
                             <div key={idx} className={`flex flex-col md:flex-row items-center mb-24 relative ${idx % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
                                 {/* Content Side */}
                                 <div className="w-full md:w-[42%]">
-                                    <motion.div whileInView={{ opacity: 1, x: 0 }} initial={{ opacity: 0, x: idx % 2 === 0 ? 20 : -20 }} viewport={{ once: true }}
-                                        className={`bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 ${idx % 2 === 0 ? 'text-left' : 'md:text-right'}`}>
+                                    <motion.div
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        initial={{ opacity: 0, x: idx % 2 === 0 ? 20 : -20 }}
+                                        viewport={{ once: true, margin: "-100px" }}
+                                        transition={{ duration: 0.5 }}
+                                        className={`bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 ${idx % 2 === 0 ? 'text-left' : 'md:text-right'
+                                            } relative`}
+                                    >
                                         <span className={`text-xs font-bold uppercase tracking-widest ${item.color}`}>{item.step}</span>
                                         <h3 className="text-2xl font-bold mt-2 mb-4 italic leading-tight">{item.title}</h3>
                                         <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
@@ -286,7 +329,7 @@ const Landing = () => {
             </section>
 
             {/* 3. MENTORSHIP SECTION */}
-            <section id="mentors" className="py-32 px-6 bg-slate-900 text-white scroll-mt-20">
+            <section id="mentors" className="py-32 px-6 bg-slate-900 text-white scroll-mt-20 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid lg:grid-cols-2 gap-20 items-center">
                         <div>
@@ -312,7 +355,13 @@ const Landing = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center relative overflow-hidden">
+                        <motion.div
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className="bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center relative overflow-hidden"
+                        >
                             <div className="relative z-10">
                                 <p className="text-blue-400 font-bold text-sm uppercase mb-4 tracking-widest">Network Strength</p>
                                 <div className="text-[100px] font-black leading-none mb-4 text-white">
@@ -322,13 +371,13 @@ const Landing = () => {
                                 <p className="text-slate-400">Ready to help you launch and scale.</p>
                             </div>
                             <div className="absolute inset-0 bg-blue-600/10 blur-[100px] -z-0" />
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
 
             {/* 4. IMPACT SECTION (Why Choose Us?) */}
-            <section id="impact" className="py-32 px-6 bg-white border-y border-gray-100 scroll-mt-20">
+            <section id="impact" className="py-32 px-6 bg-white border-y border-gray-100 scroll-mt-20 relative">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid lg:grid-cols-2 gap-16 items-center">
                         <div className="space-y-8">
@@ -346,15 +395,28 @@ const Landing = () => {
                                     "Operational framework templates",
                                     "Peer networking opportunities"
                                 ].map((text, i) => (
-                                    <div key={i} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                    <motion.div
+                                        key={i}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100"
+                                    >
                                         <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center"><CheckCircle className="text-green-600" size={14} /></div>
                                         <span className="text-slate-700 font-semibold text-sm">{text}</span>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 rounded-[3rem] p-12 text-white">
+                        <motion.div
+                            whileInView={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, y: 30 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className="bg-slate-900 rounded-[3rem] p-12 text-white relative"
+                        >
                             <h3 className="text-2xl font-bold mb-12 text-blue-400">Platform Performance</h3>
                             <div className="space-y-10">
                                 <div>
@@ -377,14 +439,20 @@ const Landing = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* CTA SECTION (UNCHANGED) */}
-            <section className="py-20 px-6">
-                <div className="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl">
+            {/* CTA SECTION */}
+            <section className="py-20 px-6 relative">
+                <motion.div
+                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 30 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl"
+                >
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 blur-[100px]" />
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 relative z-10">Stop dreaming, <br /> start building.</h2>
                     <p className="text-slate-400 mb-10 text-lg max-w-lg mx-auto relative z-10">Join 10,000+ people who turned their skills into local success stories.</p>
@@ -392,10 +460,10 @@ const Landing = () => {
                         <Link to="/register" className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 rounded-2xl font-bold hover:bg-blue-50 transition-colors shadow-lg">Get Started for Free</Link>
                         <button className="w-full sm:w-auto px-10 py-5 bg-slate-800 text-white rounded-2xl font-bold border border-slate-700 hover:bg-slate-700 transition-colors">Speak to an Expert</button>
                     </div>
-                </div>
+                </motion.div>
             </section>
 
-            <footer className="py-16 bg-white border-t border-gray-100">
+            <footer className="py-16 bg-white border-t border-gray-100 relative">
                 <div className="max-w-7xl mx-auto px-6 text-center">
                     <div className="flex items-center justify-center gap-2 mb-6">
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"><Zap className="text-white fill-white" size={14} /></div>

@@ -106,8 +106,12 @@ export const login = async (req, res) => {
             });
         }
 
-        user.lastActive = Date.now();
-        await user.save();
+        // ✅ UPDATE lastActive WITHOUT triggering pre-save hooks
+        await User.findByIdAndUpdate(
+            user._id,
+            { lastActive: Date.now() },
+            { timestamps: false }  // ✅ Prevents Mongoose from updating updatedAt
+        );
 
         const token = generateToken(user._id);
 

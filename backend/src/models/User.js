@@ -113,27 +113,11 @@ const userSchema = new mongoose.Schema({
     mentorProfile: {
 
         // Step 1 - Professional Identity
-        headline: {
-            type: String,
-            trim: true
-            // e.g. "Serial Entrepreneur & Digital Marketing Expert"
-        },
-        yearsOfExperience: {
-            type: Number,
-            min: 0
-        },
-        currentRole: {
-            type: String,
-            trim: true
-        },
-        linkedinUrl: {
-            type: String,
-            trim: true
-        },
-        websiteUrl: {
-            type: String,
-            trim: true
-        },
+        headline: { type: String, trim: true },
+        yearsOfExperience: { type: Number, min: 0 },
+        currentRole: { type: String, trim: true },
+        linkedinUrl: { type: String, trim: true },
+        websiteUrl: { type: String, trim: true },
 
         // Step 2 - Expertise
         primaryExpertise: [String],
@@ -147,11 +131,7 @@ const userSchema = new mongoose.Schema({
             trim: true,
             maxlength: [1000, 'Bio cannot exceed 1000 characters']
         },
-        targetMentees: {
-            type: String,
-            trim: true
-            // "Who do you want to help?"
-        },
+        targetMentees: { type: String, trim: true },
         sessionTypes: {
             qa: { type: Boolean, default: false },
             videoCall: { type: Boolean, default: false }
@@ -164,10 +144,7 @@ const userSchema = new mongoose.Schema({
         achievements: [String],
         businessesBuilt: [String],
         notableClients: [String],
-        trustStatement: {
-            type: String,
-            trim: true
-        },
+        trustStatement: { type: String, trim: true },
 
         // Stats (auto-updated)
         totalMentees: { type: Number, default: 0 },
@@ -184,19 +161,18 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// ─── Password Hashing ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+// ─── SINGLE COMBINED PRE-SAVE HOOK ────────────────────────
+// ═══════════════════════════════════════════════════════════
+// ✅ CORRECT VERSION (No next callback needed)
 userSchema.pre('save', async function () {
-    if (!this.isModified('password')) return;
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-});
+    // 1. Hash password if modified
+    if (this.isModified('password')) {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+    }
 
-userSchema.methods.comparePassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// ─── Auto-generate mentorSlug ─────────────────────────────
-userSchema.pre('save', function (next) {
+    // 2. Auto-generate mentorSlug if mentor and no slug yet
     if (this.role === 'mentor' && !this.mentorSlug) {
         const base = this.fullName
             .toLowerCase()
@@ -206,9 +182,14 @@ userSchema.pre('save', function (next) {
         const suffix = Math.random().toString(36).substring(2, 7);
         this.mentorSlug = `${base}-${suffix}`;
     }
-    next();
 });
 
+// ─── Instance Method: Compare Password ────────────────────
+userSchema.methods.comparePassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// ─── toJSON Transform ─────────────────────────────────────
 userSchema.set('toJSON', {
     transform: function (doc, ret) {
         delete ret.password;
@@ -219,7 +200,6 @@ userSchema.set('toJSON', {
 
 // ─── Indexes ──────────────────────────────────────────────
 userSchema.index({ role: 1, mentorVerificationStatus: 1 });
-// userSchema.index({ mentorSlug: 1 });
 userSchema.index({
     'mentorProfile.headline': 'text',
     'mentorProfile.bio': 'text',

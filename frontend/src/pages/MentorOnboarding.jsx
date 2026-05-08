@@ -192,7 +192,7 @@ const MentorOnboarding = () => {
                 return false;
             }
             if (form.languages.length === 0) {
-                toast.error('Add at least one language');
+                toast.error('Add at least one language (e.g., English, Hindi)');
                 return false;
             }
         }
@@ -470,7 +470,7 @@ const MentorOnboarding = () => {
                                 </div>
                             )}
 
-                            {/* STEP 3: Mentorship Details */}
+                            {/* STEP 3: Mentorship Details - ✅ FIXED */}
                             {step === 3 && (
                                 <div className="space-y-5">
                                     {/* Bio */}
@@ -578,35 +578,32 @@ const MentorOnboarding = () => {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {/* Hours per week */}
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                Hours/Week for Mentoring
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="hoursPerWeek"
-                                                value={form.hoursPerWeek}
-                                                onChange={handleChange}
-                                                min="1"
-                                                max="40"
-                                                placeholder="e.g., 5"
-                                                className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400"
-                                            />
-                                        </div>
-
-                                        {/* Languages */}
-                                        <div>
-                                            <TagInput
-                                                label="Languages You Mentor In *"
-                                                placeholder="e.g., English..."
-                                                tags={form.languages}
-                                                onAdd={(val) => addTag('languages', val)}
-                                                onRemove={(i) => removeTag('languages', i)}
-                                            />
-                                        </div>
+                                    {/* Hours per week */}
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Hours/Week for Mentoring
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="hoursPerWeek"
+                                            value={form.hoursPerWeek}
+                                            onChange={handleChange}
+                                            min="1"
+                                            max="40"
+                                            placeholder="e.g., 5"
+                                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all text-gray-900 dark:text-white placeholder-gray-400"
+                                        />
                                     </div>
+
+                                    {/* ✅ FIXED: Languages moved OUTSIDE grid */}
+                                    <TagInput
+                                        label="Languages You Mentor In *"
+                                        placeholder="Type language and press Enter (e.g., English, Hindi, Spanish)..."
+                                        tags={form.languages}
+                                        onAdd={(val) => addTag('languages', val)}
+                                        onRemove={(i) => removeTag('languages', i)}
+                                        hint="💡 Add at least one language"
+                                    />
                                 </div>
                             )}
 
@@ -672,6 +669,7 @@ const MentorOnboarding = () => {
                                                 form.sessionTypes.qa && 'Q&A',
                                                 form.sessionTypes.videoCall && 'Video Call'
                                             ].filter(Boolean).join(', ') || '—'}</p>
+                                            <p><span className="font-semibold">Languages:</span> {form.languages.join(', ') || '—'}</p>
                                         </div>
                                     </div>
                                 </div>

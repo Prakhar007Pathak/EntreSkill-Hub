@@ -6,6 +6,7 @@ const Input = ({
     icon: Icon,
     error,
     className = '',
+    autoComplete,  // ✅ Extract autoComplete separately
     ...props
 }) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -27,15 +28,16 @@ const Input = ({
                 <input
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
+                    autoComplete={autoComplete}  // ✅ Pass autoComplete explicitly
                     className={`
-            w-full px-4 py-3.5 ${Icon ? 'pl-12' : ''} 
-            border-2 ${error ? 'border-red-400' : isFocused ? 'border-blue-500' : 'border-gray-200'} 
-            rounded-xl outline-none bg-white
-            ${isFocused ? 'ring-4 ring-blue-100' : ''}
-            transition-all duration-300
-            placeholder-transparent
-            ${className}
-          `}
+                        w-full px-4 py-3.5 ${Icon ? 'pl-12' : ''} 
+                        border-2 ${error ? 'border-red-400' : isFocused ? 'border-blue-500' : 'border-gray-200'} 
+                        rounded-xl outline-none bg-white
+                        ${isFocused ? 'ring-4 ring-blue-100' : ''}
+                        transition-all duration-300
+                        placeholder-transparent
+                        ${className}
+                    `}
                     placeholder={label}
                     {...props}
                 />

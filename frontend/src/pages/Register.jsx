@@ -283,6 +283,7 @@ const Register = () => {
                                     type="email"
                                     name="email"
                                     label="Email Address"
+                                    autoComplete="email"
                                     icon={Mail}
                                     value={formData.email}
                                     onChange={handleChange}
@@ -303,6 +304,7 @@ const Register = () => {
                                     type="password"
                                     name="password"
                                     label="Password"
+                                    autoComplete="new-password"
                                     icon={Lock}
                                     value={formData.password}
                                     onChange={handleChange}
@@ -313,6 +315,7 @@ const Register = () => {
                                     type="password"
                                     name="confirmPassword"
                                     label="Confirm Password"
+                                    autoComplete="new-password"
                                     icon={Lock}
                                     value={formData.confirmPassword}
                                     onChange={handleChange}

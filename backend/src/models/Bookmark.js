@@ -10,7 +10,7 @@ const bookmarkSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ['business', 'resource'],
-        default: 'business'
+        required: true
     },
     // ─── BUSINESS BOOKMARK ────────────────────────────────
     businessId: {
@@ -28,15 +28,37 @@ const bookmarkSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Prevent duplicate bookmarks
+// ✅ FIXED: Updated indexes to be sparse and only when field exists
 bookmarkSchema.index(
     { userId: 1, businessId: 1 },
-    { unique: true, sparse: true }
+    {
+        unique: true,
+        sparse: true,
+        partialFilterExpression: { businessId: { $type: 'objectId' } }
+    }
 );
+
 bookmarkSchema.index(
     { userId: 1, resourceId: 1 },
-    { unique: true, sparse: true }
+    {
+        unique: true,
+        sparse: true,
+        partialFilterExpression: { resourceId: { $type: 'objectId' } }
+    }
 );
+
+// ✅ FIXED: Remove `next` callback - use async/await instead
+bookmarkSchema.pre('save', async function () {
+    // Validation: ensure at least one ID is present
+    if (!this.businessId && !this.resourceId) {
+        throw new Error('Either businessId or resourceId must be provided');
+    }
+
+    // Validation: cannot have both
+    if (this.businessId && this.resourceId) {
+        throw new Error('Cannot bookmark both business and resource at once');
+    }
+});
 
 const Bookmark = mongoose.model('Bookmark', bookmarkSchema);
 

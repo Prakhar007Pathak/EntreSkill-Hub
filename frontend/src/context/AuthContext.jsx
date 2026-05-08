@@ -38,6 +38,20 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    // ✅ NEW: Refresh user data from backend
+    const refreshUser = async () => {
+        try {
+            const response = await authService.getMe(); // Assumes you have this service
+            const updatedUser = response.data.user;
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            return updatedUser;
+        } catch (error) {
+            console.error('Failed to refresh user:', error);
+            return null;
+        }
+    };
+
     // ─── Role Helpers ──────────────────────────────────────
     const isUser = user?.role === 'user';
     const isMentor = user?.role === 'mentor';
@@ -56,6 +70,7 @@ export const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
+        refreshUser, // ✅ NEW: Export refresh function
         isAuthenticated: !!user,
 
         // Role helpers

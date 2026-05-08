@@ -1,20 +1,59 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
 import {
     Clock, CheckCircle2, XCircle, Mail,
-    GraduationCap, ArrowRight, LogOut
+    GraduationCap, LogOut, RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MentorPendingVerification = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, refreshUser } = useAuth();
     const navigate = useNavigate();
+    const [checking, setChecking] = useState(false);
+
+    // ✅ Auto-redirect if approved
+    useEffect(() => {
+        if (user?.mentorVerificationStatus === 'approved') {
+            toast.success('Your account has been approved! 🎉');
+            setTimeout(() => navigate('/mentor/dashboard'), 1500);
+        }
+    }, [user, navigate]);
+
+    // ✅ Auto-check every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            await refreshUser();
+        }, 30000); // Check every 30 seconds
+
+        return () => clearInterval(interval);
+    }, [refreshUser]);
 
     const handleLogout = () => {
         logout();
         toast.success('Logged out successfully');
         navigate('/login');
+    };
+
+    // ✅ Manual check status button
+    const handleCheckStatus = async () => {
+        setChecking(true);
+        try {
+            const updatedUser = await refreshUser();
+            if (updatedUser?.mentorVerificationStatus === 'approved') {
+                toast.success('Approved! Redirecting...');
+                setTimeout(() => navigate('/mentor/dashboard'), 1000);
+            } else if (updatedUser?.mentorVerificationStatus === 'rejected') {
+                toast.error('Application rejected');
+            } else {
+                toast('Still pending review');
+            }
+        } catch (error) {
+            toast.error('Failed to check status');
+        } finally {
+            setChecking(false);
+        }
     };
 
     const statusConfig = {
@@ -77,11 +116,10 @@ const MentorPendingVerification = () => {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: 'spring', stiffness: 200 }}
-                            className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${config.gradient} rounded-3xl mb-6 shadow-xl`}
+                            className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${config.gradient} rounded-3xl mb-6 shadow-lg`}
                         >
                             <StatusIcon size={36} className="text-white" />
                         </motion.div>
-
                         <h1 className="text-3xl font-heading font-bold text-gray-900 dark:text-white mb-3">
                             {config.title}
                         </h1>
@@ -150,7 +188,6 @@ const MentorPendingVerification = () => {
                                     <p className="text-sm text-blue-600 dark:text-blue-500">
                                         Once our team reviews your profile at <strong>{user?.email}</strong>,
                                         you'll receive an email with the decision.
-                                        You can safely close this page.
                                     </p>
                                 </div>
                             </div>
@@ -174,6 +211,34 @@ const MentorPendingVerification = () => {
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-3">
+                        {/* ✅ Check Status Button */}
+                        {status === 'pending' && (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleCheckStatus}
+                                disabled={checking}
+                                className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-600 disabled:opacity-60 transition-all"
+                            >
+                                {checking ? (
+                                    <>
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                        >
+                                            <RefreshCw size={18} />
+                                        </motion.div>
+                                        Checking...
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw size={18} />
+                                        Check Status
+                                    </>
+                                )}
+                            </motion.button>
+                        )}
+
                         {status === 'rejected' && (
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
